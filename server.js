@@ -4,7 +4,7 @@ const dbConfig = require("./app/config/db.config");
 const errorHandler = require("./app/helpers/error.handler");
 const app = express();
 
-var corsOptions = {
+const corsOptions = {
   origin: "http://localhost:8081"
 };
 
@@ -47,38 +47,15 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
 
-function initial() {
-  Role.estimatedDocumentCount((err, count) => {
-    if (!err && count === 0) {
-      new Role({
-        name: "user"
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-
-        console.log("added 'user' to roles collection");
-      });
-
-      new Role({
-        name: "moderator"
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-
-        console.log("added 'moderator' to roles collection");
-      });
-
-      new Role({
-        name: "admin"
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-
-        console.log("added 'admin' to roles collection");
-      });
+async function initial() {
+  try {
+    const documentCount = await Role.estimatedDocumentCount();
+    if (documentCount === 0) {
+      const roles = db.ROLES.map(name => ({ name }));
+      await Role.insertMany(roles);
+      console.log("added 'user', 'moderator', 'admin' to roles collection");
     }
-  });
+  } catch (error) {
+    console.log(error);
+  }
 }

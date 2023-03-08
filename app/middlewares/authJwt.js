@@ -24,66 +24,47 @@ verifyToken = (req, res, next) => {
     });
 };
 
-isAdmin = (req, res, next) => {
-  User.findById(req.userId).exec((err, user) => {
-    if (err) {
-      res.status(500).send({ message: err });
+isAdmin = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) throw "User Not found.";
+
+    const roles = await Role.find({ _id: { $in: user.roles } });
+    if (!roles) throw "Roles Not found.";
+
+    if (roles.some(role => role.name === "admin")) {
+      next();
       return;
     }
 
-    Role.find(
-      {
-        _id: { $in: user.roles }
-      },
-      (err, roles) => {
-        if (err) {
-          res.status(500).send({ message: err });
-          return;
-        }
+    res.status(403).send({ message: "Require Admin Role!" });
+    return;
 
-        for (let i = 0; i < roles.length; i++) {
-          if (roles[i].name === "admin") {
-            next();
-            return;
-          }
-        }
-
-        res.status(403).send({ message: "Require Admin Role!" });
-        return;
-      }
-    );
-  });
+  } catch (error) {
+    return errorHandler(error, req, res, null)
+  }
 };
 
-isModerator = (req, res, next) => {
-  User.findById(req.userId).exec((err, user) => {
-    if (err) {
-      res.status(500).send({ message: err });
+isModerator = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) throw "User Not found.";
+
+    const roles = await Role.find({ _id: { $in: user.roles } });
+    if (!roles) throw "Roles Not found.";
+
+    if (roles.some(role => role.name === "moderator")) {
+      next();
       return;
     }
 
-    Role.find(
-      {
-        _id: { $in: user.roles }
-      },
-      (err, roles) => {
-        if (err) {
-          res.status(500).send({ message: err });
-          return;
-        }
-        
-        for (let i = 0; i < roles.length; i++) {
-          if (roles[i].name === "moderator") {
-            next();
-            return;
-          }
-        }
+    res.status(403).send({ message: "Require Moderator Role!" });
+    return;
 
-        res.status(403).send({ message: "Require Moderator Role!" });
-        return;
-      }
-    );
-  });
+  } catch (error) {
+    return errorHandler(error, req, res, null)
+  }
+
 };
 
 const authJwt = {
