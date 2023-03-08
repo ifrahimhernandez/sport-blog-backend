@@ -51,8 +51,7 @@ async function initial() {
   try {
     const documentCount = await Role.estimatedDocumentCount();
     if (documentCount === 0) {
-      const roles = db.ROLES.map(name => ({ name }));
-      await Role.insertMany(roles);
+      await Role.insertMany(db.ROLES.map(name => ({ name })));
       console.log("added 'user', 'moderator', 'admin' to roles collection");
     }
   } catch (error) {

@@ -17,7 +17,7 @@ exports.signup = async (req, res) => {
 
     await user.save();
 
-    if(req.body.roles) {
+    if (req.body.roles) {
       const roleResponse = await Role.find({ name: { $in: req.body.roles } });
       user.roles = roleResponse.map(role => role._id);
     } else {
@@ -34,7 +34,7 @@ exports.signup = async (req, res) => {
 exports.signin = async (req, res) => {
 
   try {
-    if(req.body.username === undefined || req.body.password === undefined) throw "Error: Missing required parameters."
+    if (req.body.username === undefined || req.body.password === undefined) throw "Error: Missing required parameters."
 
     const user = await User.findOne({ username: req.body.username }).populate("roles", "-__v");
     if (!user) throw "User Not found.";
@@ -48,7 +48,7 @@ exports.signin = async (req, res) => {
     const token = jwt.sign({ id: user.id }, config.secret, {
       expiresIn: 86400 // 24 hours
     });
-   
+
     res.status(200).send({
       id: user._id,
       username: user.username,
@@ -57,7 +57,7 @@ exports.signin = async (req, res) => {
       accessToken: token
     });
 
-  }catch(e) {
+  } catch (e) {
     return errorHandler(e, req, res, null)
   }
 };
