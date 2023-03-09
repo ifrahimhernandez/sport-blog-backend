@@ -1,15 +1,15 @@
-const config = require("../config/auth.config");
-const db = require("../models");
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import { errorHandler } from '../helpers/error.handler';
+import { db } from "../models";
+
 const User = db.user;
 const Role = db.role;
 
-var jwt = require("jsonwebtoken");
-var bcrypt = require("bcryptjs");
-const errorHandler = require("../helpers/error.handler");
-
-exports.signup = async (req, res) => {
+export const signup = async (req: Request, res: Response) => {
   try {
-    const user = new User({
+    const user: any = new User({
       username: req.body.username,
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 8)
@@ -19,7 +19,7 @@ exports.signup = async (req, res) => {
 
     if (req.body.roles) {
       const roleResponse = await Role.find({ name: { $in: req.body.roles } });
-      user.roles = roleResponse.map(role => role._id);
+      user.roles = roleResponse.map((role: any) => role._id);
     } else {
       const roleResponse = await Role.findOne({ name: "user" });
       user.roles = [roleResponse._id];
@@ -31,12 +31,12 @@ exports.signup = async (req, res) => {
   }
 };
 
-exports.signin = async (req, res) => {
+export const signin = async (req: Request, res: Response) => {
 
   try {
     if (req.body.username === undefined || req.body.password === undefined) throw "Error: Missing required parameters."
 
-    const user = await User.findOne({ username: req.body.username }).populate("roles", "-__v");
+    const user: any = await User.findOne({ username: req.body.username }).populate("roles", "-__v");
     if (!user) throw "User Not found.";
 
     const passwordIsValid = bcrypt.compareSync(
@@ -45,7 +45,7 @@ exports.signin = async (req, res) => {
     );
     if (!passwordIsValid) throw "Invalid Password!";
 
-    const token = jwt.sign({ id: user.id }, config.secret, {
+    const token = jwt.sign({ id: user.id }, process.env.SECRET, {
       expiresIn: 86400 // 24 hours
     });
 
@@ -53,7 +53,7 @@ exports.signin = async (req, res) => {
       id: user._id,
       username: user.username,
       email: user.email,
-      roles: user.roles.map(role => "ROLE_" + role.name.toUpperCase()),
+      roles: user.roles.map((role: any) => "ROLE_" + role.name.toUpperCase()),
       accessToken: token
     });
 

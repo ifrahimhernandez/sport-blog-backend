@@ -1,13 +1,13 @@
-const express = require("express");
-const cors = require("cors");
-const dbConfig = require("./app/config/db.config");
-const errorHandler = require("./app/helpers/error.handler");
-const app = express();
+import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import { errorHandler } from './app/helpers/error.handler';
+import dotenv from 'dotenv';
+import { db } from './app/models';
+import { routes } from './app/routes';
 
-const corsOptions = {
-  origin: "http://localhost:8081"
-};
-
+dotenv.config();
+const app: Express = express();
+const corsOptions = { origin: process.env.BASE_URL };
 app.use(cors(corsOptions));
 
 // parse requests of content-type - application/json
@@ -19,11 +19,10 @@ app.use(express.urlencoded({ extended: true }));
 // global error handler
 app.use(errorHandler);
 
-const db = require("./app/models");
 const Role = db.role;
 
 db.mongoose
-  .connect(`mongodb+srv://${dbConfig.HOST}:${dbConfig.PASSWORD}@cluster0.uevbubw.mongodb.net/${dbConfig.DB}`, {
+  .connect(`mongodb+srv://${process.env.HOST}:${process.env.PASSWORD}@cluster0.uevbubw.mongodb.net/${process.env.DB}`, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
@@ -31,15 +30,14 @@ db.mongoose
     console.log("Successfully connect to MongoDB.");
     initial();
   })
-  .catch(err => {
+  .catch((err: any) => {
     console.error("Connection error", err);
     process.exit();
   });
   
 
 // routes
-require("./app/routes/auth.routes")(app);
-require("./app/routes/user.routes")(app);
+app.use("/api", routes);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
@@ -51,7 +49,7 @@ async function initial() {
   try {
     const documentCount = await Role.estimatedDocumentCount();
     if (documentCount === 0) {
-      await Role.insertMany(db.ROLES.map(name => ({ name })));
+      await Role.insertMany(db.ROLES.map((name: string) => ({ name })));
       console.log("added 'user', 'moderator', 'admin' to roles collection");
     }
   } catch (error) {

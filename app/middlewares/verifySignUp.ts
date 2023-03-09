@@ -1,9 +1,11 @@
-const errorHandler = require("../helpers/error.handler");
-const db = require("../models");
+import { Request, Response, NextFunction } from "express";
+import { errorHandler } from '../helpers/error.handler';
+import { db } from "../models";
+
 const ROLES = db.ROLES;
 const User = db.user;
 
-checkDuplicateUsernameOrEmail = async (req, res, next) => {
+const checkDuplicateUsernameOrEmail = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const username = await User.findOne({ username: req.body.username })
     if (username) throw new Error("Failed! Username is already in use!");
@@ -18,9 +20,9 @@ checkDuplicateUsernameOrEmail = async (req, res, next) => {
   }
 };
 
-checkRolesExisted = async (req, res, next) => {
+const checkRolesExisted = async (req: Request, res: Response, next: NextFunction) => {
   if (req.body.roles) {
-    req.body.roles.forEach(element => {
+    req.body.roles.forEach((element: string) => {
       if (!ROLES.includes(element)) {
         res.status(400).send({
           message: `Failed! Role ${element} does not exist!`
@@ -38,4 +40,4 @@ const verifySignUp = {
   checkRolesExisted
 };
 
-module.exports = verifySignUp;
+export { verifySignUp };

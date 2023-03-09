@@ -1,12 +1,15 @@
-const jwt = require("jsonwebtoken");
-const config = require("../config/auth.config.js");
-const db = require("../models");
+import { IGetUserAuthInfoRequest } from './../interfaces/userAuth.model';
+import { Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { errorHandler } from '../helpers/error.handler';
+import { db } from "../models";
+
 const User = db.user;
 const Role = db.role;
 
-verifyToken = (req, res, next) => {
+const verifyToken = (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
     // Header names in Express are auto-converted to lowercase
-    let token = req.headers['x-access-token'] || req.headers['authorization']; 
+    let token: any = req.headers['x-access-token'] || req.headers['authorization']; 
 
     // Remove Bearer from string
     token = token.replace(/^Bearer\s+/, "");
@@ -15,7 +18,7 @@ verifyToken = (req, res, next) => {
       return res.status(403).send({ message: "No token provided!" });
     }
 
-    jwt.verify(token, config.secret, (err, decoded) => {
+    jwt.verify(token, process.env.SECRET, (err: any, decoded: any) => {
       if (err) {
         return res.status(401).send({ message: "Unauthorized!" });
       }
@@ -23,16 +26,15 @@ verifyToken = (req, res, next) => {
       next();
     });
 };
-
-isAdmin = async (req, res, next) => {
+const isAdmin = async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await User.findById(req.userId);
+    const user: any = await User.findById(req.userId);
     if (!user) throw "User Not found.";
 
     const roles = await Role.find({ _id: { $in: user.roles } });
     if (!roles) throw "Roles Not found.";
 
-    if (roles.some(role => role.name === "admin")) {
+    if (roles.some((role: any) => role.name === "admin")) {
       next();
       return;
     }
@@ -44,16 +46,15 @@ isAdmin = async (req, res, next) => {
     return errorHandler(error, req, res, null)
   }
 };
-
-isModerator = async (req, res, next) => {
+const isModerator = async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await User.findById(req.userId);
+    const user: any = await User.findById(req.userId);
     if (!user) throw "User Not found.";
 
     const roles = await Role.find({ _id: { $in: user.roles } });
     if (!roles) throw "Roles Not found.";
 
-    if (roles.some(role => role.name === "moderator")) {
+    if (roles.some((role: any) => role.name === "moderator")) {
       next();
       return;
     }
@@ -67,9 +68,6 @@ isModerator = async (req, res, next) => {
 
 };
 
-const authJwt = {
-  verifyToken,
-  isAdmin,
-  isModerator
-};
-module.exports = authJwt;
+const authJwt = { verifyToken, isAdmin, isModerator };
+
+export { authJwt }
