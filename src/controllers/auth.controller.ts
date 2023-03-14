@@ -12,7 +12,7 @@ const signUp = async (req: Request, res: Response, next: NextFunction) => {
 
   if (roles) {
     const roleResponse = await Role.find({ name: { $in: roles } });
-    if (roleResponse.length === 0) return res.status(400).json({ message: "Role does not exist" });
+    if (roleResponse.length === 0) return res.status(400).json({ type: "error", message: "Role does not exist" });
     foundRoles = roleResponse.map((role: any) => role._id);
   }
 
@@ -38,17 +38,20 @@ const signIn = async (req: Request, res: Response, next: NextFunction) => {
   const { username, password } = req.body;
 
   const user = await User.findOne({ username: username }).populate("roles", "-__v");
-  if (!user) return res.status(404).json({ message: "User Not found." });
+  if (!user) return res.status(404).json({ type: "error", message: "User Not found." });
 
   const passwordIsValid = bcrypt.compareSync(
     password,
     user.password
   );
-  if (!passwordIsValid) return res.status(401).json({ accessToken: null, message: "Invalid Password!" });
+  if (!passwordIsValid) return res.status(401).json({ type: "error", message: "Invalid Password!" });
 
   const token = jwt.sign({ id: user.id }, config.server.secret, {
     expiresIn: 86400 // 24 hours
   });
+
+  const decodedToken = jwt.decode(token, { complete: true }) as { [key: string]: any };
+  const { exp, iat, nbf } = decodedToken.payload;
 
   res.status(200).send({
     id: user._id,
@@ -58,7 +61,8 @@ const signIn = async (req: Request, res: Response, next: NextFunction) => {
     last_name: user.last_name,
     email: user.email,
     roles: user.roles.map((role: any) => "ROLE_" + role.name.toUpperCase()),
-    accessToken: token
+    token: token,
+    exp, iat, nbf
   });
 };
 

@@ -43,7 +43,7 @@ const StartServer = () => {
   router.use(express.urlencoded({ extended: true }));
   /** Parse requests of content-type - application/json */
   router.use(express.json());
-  router.use(cors({ origin: config.server.baseUrl }));
+  router.use(cors({ origin: '*' }));
 
   /** Rules of our API */
   router.use((req: Request, res: Response, next: NextFunction) => {
