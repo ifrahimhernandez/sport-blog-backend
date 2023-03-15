@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Author from '../models/Author';
+import Author from '../models/author.model';
 
 const createAuthor = (req: Request, res: Response, next: NextFunction) => {
     const { name } = req.body;
